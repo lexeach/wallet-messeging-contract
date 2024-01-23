@@ -1,11 +1,8 @@
-pragma solidity ^0.4.15;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.23;
 
-/** Ethereum Classic messaging system reference implementation
- *
- *  Originally designed by Dexaran
- */
 
-contract ClassicEtherWallet_Messages {
+contract Messages_contract {
     
     event Message(address indexed _sender, address indexed _receiver, uint256 _time, string message);
     event PublicKeyUpdated(address indexed _sender, string _key, string _keytype);
@@ -29,27 +26,27 @@ contract ClassicEtherWallet_Messages {
     
     uint256 public message_staling_period = 25 days;
     
-    function sendMessage(address _to, string _text)
+    function sendMessage(address _to, string memory _text) public 
     {
         messages[_to][last_msg_index[_to]].from = msg.sender;
         messages[_to][last_msg_index[_to]].text = _text;
-        messages[_to][last_msg_index[_to]].time = now;
+        messages[_to][last_msg_index[_to]].time = block.timestamp;
         last_msg_index[_to]++;
-        Message(msg.sender, _to, now, _text);
+        emit Message(msg.sender, _to, block.timestamp, _text);
     }
     
-    function lastIndex(address _owner) constant returns (uint256)
+    function lastIndex(address _owner) public view returns (uint256)
     {
         return last_msg_index[_owner];
     }
     
-    function getLastMessage(address _who) constant returns (address, string, uint256)
+    function getLastMessage(address _who) public view returns (address, string memory, uint256)
     {
         require(last_msg_index[_who] > 0);
         return (messages[_who][last_msg_index[_who] - 1].from, messages[_who][last_msg_index[_who] - 1].text, messages[_who][last_msg_index[_who] - 1].time);
     }
     
-    function getMessageByIndex(address _who, uint256 _index) constant returns (address, string, uint256)
+    function getMessageByIndex(address _who, uint256 _index) public view returns (address, string memory, uint256)
     
     {
         
@@ -58,20 +55,20 @@ contract ClassicEtherWallet_Messages {
     
     
     
-    function newMessage(address _who, uint256 _index) constant returns (bool)
+    function newMessage(address _who, uint256 _index) public view returns (bool)
     {
-        return messages[_who][_index].time + message_staling_period > now;
+        return messages[_who][_index].time + message_staling_period > block.timestamp;
     }
     
-    function getPublicKey(address _who) constant returns (string _key, string _key_type)
+    function getPublicKey(address _who) public view returns (string memory _key, string memory _key_type)
     {
         return (keys[_who].key, keys[_who].key_type);
     }
     
-    function setPublicKey(string _key, string _type)
+    function setPublicKey(string memory _key, string memory _type) public
     {
         keys[msg.sender].key = _key;
         keys[msg.sender].key_type = _type;
-        PublicKeyUpdated(msg.sender, _key, _type);
+        emit PublicKeyUpdated(msg.sender, _key, _type);
     }
 }
